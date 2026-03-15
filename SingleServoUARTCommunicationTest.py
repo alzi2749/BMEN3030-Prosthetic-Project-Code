@@ -7,11 +7,11 @@ my_servo = Servo(servo2040.SERVO_1)
 my_servo.enable()
 my_servo.to_mid() # Start at the center position
 
-# 2. Set up UART on SDA (GP4) and SCL (GP5)
-# RP2040 Hardware UART1 uses GP4 for TX and GP5 for RX
-uart = UART(1, baudrate=115200, tx=Pin(4), rx=Pin(5))
+# 2. Set up UART on SDA (GP20) and SCL (GP21)
+# RP2040 Hardware UART1 gp20 and gp21
+uart = UART(1, baudrate=115200, tx=Pin(20), rx=Pin(21))
 
-print("Listening for ESP32 UART signals on GP4 and GP5...")
+print("Listening for ESP32 UART signals on GP20 and GP21...")
 
 while True:
     # Check if there is data waiting in the UART buffer
@@ -30,12 +30,8 @@ while True:
                 # Clamp the angle to ensure it doesn't exceed physical limits
                 angle = max(-90.0, min(90.0, angle))
                 
-                # The Pimoroni servo.value() expects a float between -1.0 and 1.0
-                # We map the -90 to 90 degree angle to this -1.0 to 1.0 range
-                servo_val = angle
-                
                 # Command the servo to move
-                my_servo.value(servo_val)
+                my_servo.value(angle)
                 print(f"Success: Moved to {angle} degrees (Value: {servo_val})")
                 
             except ValueError:
