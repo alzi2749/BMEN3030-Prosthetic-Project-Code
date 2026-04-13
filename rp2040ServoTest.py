@@ -1,57 +1,40 @@
 import time
-import math
-from servo import Servo, servo2040
+from servo import Calibration, Servo, servo2040, ANGULAR
 
-# 1. Initialize the servo
-# Plug your servo into the header marked "1" on the board.
-# If you are using a different slot, change SERVO_1 to SERVO_2, SERVO_3, etc.
-test_servo = Servo(servo2040.SERVO_1)
+WIDE_ANGLE_RANGE = 270
 
-# Enable the servo (usually enabled by default when initialized, but good practice)
-test_servo.enable()
+# 1. Create a range of all servo pins from SERVO_1 to SERVO_18
+servo_pins = range(servo2040.SERVO_1, servo2040.SERVO_18 + 1)
+servos = []
 
-print("Starting Servo 2040 Test...")
+# 2. Initialize and calibrate all servos
+for pin in servo_pins:
+    s = Servo(pin, ANGULAR)
+    
+    # Apply the wide angle (270 degree) calibration
+    cal = s.calibration()
+    cal.first_value(-WIDE_ANGLE_RANGE / 2) # Maps lower limit to -135
+    cal.last_value(WIDE_ANGLE_RANGE / 2)   # Maps upper limit to +135
+    s.calibration(cal)
+    
+    servos.append(s)
 
+# 3. Enable all servos and send to min angle
+print("Enabling all servos and moving to minimum angle (-135 degrees)...")
+for s in servos:
+    s.enable()
+    s.value(-135) # Automatically sends the servo to your calibrated first_value
+    
+# 4. Hold position until the user stops the script
+print("Holding at minimum angle. Press Stop (Ctrl+C) to exit and disable.")
 try:
-    # --- Part 1: Stepped Movements ---
-    print("Moving to Minimum...")
-    test_servo.to_min()
-    time.sleep(1.5)
-
-    print("Moving to Center...")
-    test_servo.to_mid()
-    time.sleep(1.5)
-
-    print("Moving to Maximum...")
-    test_servo.to_max()
-    time.sleep(1.5)
-    
-    print("Moving back to Center...")
-    test_servo.to_mid()
-    time.sleep(1.5)
-
-    # --- Part 2: Smooth Sweeping ---
-    print("Starting smooth sweep. Press Ctrl+C in the console to stop.")
-    
-    # The .value() method takes a float between -1.0 (min) and 1.0 (max)
-    # We use a sine wave to create a smooth sweeping motion
     while True:
-        # Generate a time-based value for our sine wave
-        t = time.ticks_ms() / 1000.0
-        
-        # Calculate a value between -1.0 and 1.0
-        sweep_value = math.sin(t * 2) 
-        
-        # Apply the value to the servo
-        test_servo.value(sweep_value)
-        
-        # Small delay to keep the loop from running too fast
-        time.sleep(0.02)
+        # Keep the script alive so the servos hold their position
+        time.sleep(1)
 
 except KeyboardInterrupt:
-    # Gracefully handle stopping the script
-    print("Test stopped by user.")
-    
-    # Disable the servo to stop it from drawing power and holding its position
-    test_servo.disable()
-    print("Servo disabled.")
+    # Safely disable all servos when you stop the script
+    print("\nDisabling all servos...")
+    for s in servos:
+        s.disable()
+    print("Test stopped.")

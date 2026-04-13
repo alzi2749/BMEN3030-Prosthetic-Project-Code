@@ -79,10 +79,10 @@ void setup() {
   // Start the USB Serial communication with your computer
   
   // Start the Hardware Serial communication with the Servo 2040
+  // Turn on the internal pull-up resistor to prevent floating noise
+  pinMode(RXD2, INPUT_PULLUP); 
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
-  
-  Serial.println("ESP32 Manual Servo Controller Started.");
-  Serial.println("Type 5 comma-separated angles (e.g., 45.0,-10.0,0.0,135.0,-135.0) and hit Enter.");
+
 
   BLEScan* pScan = BLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
